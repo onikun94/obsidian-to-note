@@ -78,7 +78,7 @@ jobs:
 
       - name: Push changes
         run: |
-          git push origin master
+          git push origin main
 
       - name: Create and push tag
         run: |
