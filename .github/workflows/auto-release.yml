@@ -63,8 +63,11 @@ jobs:
           # manifest.jsonとversions.jsonを更新
           npm run version
           
+          # README.mdのバージョンバッジを更新
+          sed -i "s/version-[0-9]*\.[0-9]*\.[0-9]*/version-${NEW_VERSION}/g" README.md
+          
           # 変更をコミット
-          git add package.json manifest.json versions.json
+          git add package.json manifest.json versions.json README.md
           git commit -m "chore: バージョンを ${NEW_VERSION} に更新"
           
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
