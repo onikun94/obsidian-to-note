@@ -1,6 +1,6 @@
 {
   "name": "obsidian-to-note",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Convert Obsidian markdown to note format",
   "main": "main.js",
   "scripts": {

@@ -1,7 +1,7 @@
 # Obsidian to Note
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.0.0-blue.svg)](https://github.com/onikun94/obsidian-to-note/releases)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/onikun94/obsidian-to-note/releases)
 [![Obsidian Plugin](https://img.shields.io/badge/Obsidian-Plugin-7c3aed.svg)](https://obsidian.md)
 
 A plugin that converts Obsidian markdown to a format that can be copy-pasted into note editor.
