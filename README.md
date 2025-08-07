@@ -1,74 +1,74 @@
 # Obsidian to Note
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/onikun94/obsidian-to-note/releases)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/onikun94/obsidian-to-note/releases)
 [![Obsidian Plugin](https://img.shields.io/badge/Obsidian-Plugin-7c3aed.svg)](https://obsidian.md)
 
-Obsidianのマークダウンをnoteのエディタにコピペできるフォーマットに変換するプラグインです。
+A plugin that converts Obsidian markdown to a format that can be copy-pasted into note editor.
 
-## 機能
+## Features
 
-- Obsidian独自の記法をnoteで表示可能な形式に変換
-- 変換ルールを設定画面でカスタマイズ可能
-- プレビュー機能でコピー前に確認
-- ワンクリックでnoteの新規作成画面を開く
+- Converts Obsidian-specific syntax to a format displayable in note
+- Customizable conversion rules via settings screen
+- Preview function to check before copying
+- One-click to open note's new post screen
 
-## インストール方法
+## Installation
 
-1. Obsidianの設定 → コミュニティプラグイン → ブラウズ
-2. "Obsidian to Note"を検索
-3. インストールして有効化
+1. Obsidian Settings → Community plugins → Browse
+2. Search for "Obsidian to Note"
+3. Install and enable
 
-### 手動インストール
+### Manual Installation
 
-1. [Releases](https://github.com/yourusername/obsidian-to-note/releases)から最新版をダウンロード
-2. `main.js`、`manifest.json`を`VaultFolder/.obsidian/plugins/obsidian-to-note/`にコピー
-3. Obsidianを再起動し、設定でプラグインを有効化
+1. Download the latest release from [Releases](https://github.com/yourusername/obsidian-to-note/releases)
+2. Copy `main.js` and `manifest.json` to `VaultFolder/.obsidian/plugins/obsidian-to-note/`
+3. Restart Obsidian and enable the plugin in settings
 
-## 使い方
+## Usage
 
-1. noteに投稿したいノートを開く
-2. 以下のいずれかの方法で変換を実行：
-   - コマンドパレット（Cmd/Ctrl+P）で「Convert current file to note format」
-   - 左サイドバーの鉛筆アイコンをクリック
-3. プレビューで変換結果を確認
-4. 「コピー」または「noteで開く」をクリック
-5. noteのエディタに貼り付けて投稿
+1. Open the note you want to post to note
+2. Execute conversion using one of the following methods:
+   - Command palette (Cmd/Ctrl+P) → "Convert current file to note format"
+   - Click the pencil icon in the left sidebar
+3. Check the conversion result in preview
+4. Click "Copy" or "Open in note"
+5. Paste into note editor and post
 
-## 変換ルール
+## Conversion Rules
 
-### デフォルト設定
+### Default Settings
 
-- **H1 (#)** → 大見出し
-- **H2 (##)** → 小見出し  
-- **H3-H6 (###〜)** → 強調（**太字**）
-- **内部リンク [[link]]** → Markdownリンク
-- **ハイライト ==text==** → `<mark>text</mark>`
-- **チェックボックス** → □ / ☑
+- **H1 (#)** → Large heading
+- **H2 (##)** → Small heading
+- **H3-H6 (###〜)** → Emphasis (**Bold**)
+- **Internal links [[link]]** → Markdown links
+- **Highlight ==text==** → `<mark>text</mark>`
+- **Checkboxes** → □ / ☑
 
-### カスタマイズ可能な項目
+### Customizable Items
 
-設定画面で以下の項目をカスタマイズできます：
+You can customize the following items in the settings screen:
 
-- 各見出しレベル（H1〜H6）の変換方法
-- ハイライトの変換方法
-- 内部リンクの処理方法
-- チェックボックスの記号
-- Mermaid図表の代替テキスト
+- Conversion method for each heading level (H1-H6)
+- Highlight conversion method
+- Internal link processing method
+- Checkbox symbols
+- Alternative text for Mermaid diagrams
 
-## 開発
+## Development
 
 ```bash
-# 依存関係のインストール
+# Install dependencies
 npm install
 
-# 開発モード
+# Development mode
 npm run dev
 
-# ビルド
+# Build
 npm run build
 ```
 
-## ライセンス
+## License
 
 MIT License
