@@ -87,9 +87,9 @@ jobs:
 
       - name: Prepare release files
         run: |
-          mkdir obsidian-local-rss
-          cp main.js manifest.json styles.css README.md obsidian-local-rss/
-          zip -r obsidian-local-rss.zip obsidian-local-rss
+          mkdir obsidian-to-note
+          cp main.js manifest.json README.md obsidian-to-note/
+          zip -r obsidian-to-note.zip obsidian-to-note
 
       - name: Create GitHub release
         env:
@@ -103,10 +103,9 @@ jobs:
           gh release create "${{ env.NEW_VERSION }}" \
             --title="${{ env.NEW_VERSION }}" \
             --notes="$RELEASE_NOTES" \
-            obsidian-local-rss.zip \
+            obsidian-to-note.zip \
             main.js \
             manifest.json \
-            styles.css
 
       - name: Release completion notification
         run: |
