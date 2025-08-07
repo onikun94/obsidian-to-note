@@ -60,13 +60,13 @@ You can customize the following items in the settings screen:
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Development mode
-npm run dev
+pnpm run dev
 
 # Build
-npm run build
+pnpm run build
 ```
 
 ## License

@@ -1,10 +1,10 @@
-name: 自動リリース
+name: Auto Release
 
 on:
   workflow_dispatch:
     inputs:
       version_type:
-        description: 'バージョンタイプ'
+        description: 'Version type'
         required: true
         default: 'patch'
         type: choice
@@ -13,7 +13,7 @@ on:
           - minor
           - major
       release_notes:
-        description: 'リリースノート（オプション）'
+        description: 'Release notes (optional)'
         required: false
         type: string
 
@@ -25,79 +25,79 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: チェックアウト
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: PNPM設定
+      - name: Setup PNPM
         uses: pnpm/action-setup@v4
 
-      - name: Node.js設定
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
 
-      - name: 依存関係のインストール
+      - name: Install dependencies
         run: pnpm install
 
-      - name: Gitユーザー設定
+      - name: Configure Git user
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-      - name: バージョン更新とコミット
+      - name: Update version and commit
         run: |
-          # 現在のバージョンを取得
+          # Get current version
           CURRENT_VERSION=$(node -p "require('./package.json').version")
-          echo "現在のバージョン: $CURRENT_VERSION"
+          echo "Current version: $CURRENT_VERSION"
           
-          # バージョンを更新
+          # Update version
           npm version ${{ github.event.inputs.version_type }} --no-git-tag-version
           
-          # 新しいバージョンを取得
+          # Get new version
           NEW_VERSION=$(node -p "require('./package.json').version")
-          echo "新しいバージョン: $NEW_VERSION"
+          echo "New version: $NEW_VERSION"
           
-          # manifest.jsonとversions.jsonを更新
+          # Update manifest.json and versions.json
           npm run version
           
-          # README.mdのバージョンバッジを更新
+          # Update version badge in README.md
           sed -i "s/version-[0-9]*\.[0-9]*\.[0-9]*/version-${NEW_VERSION}/g" README.md
           
-          # 変更をコミット
+          # Commit changes
           git add package.json manifest.json versions.json README.md
-          git commit -m "chore: バージョンを ${NEW_VERSION} に更新"
+          git commit -m "chore: bump version to ${NEW_VERSION}"
           
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
-      - name: プラグインのビルド
+      - name: Build plugin
         run: pnpm build
 
-      - name: 変更をプッシュ
+      - name: Push changes
         run: |
           git push origin master
 
-      - name: タグ作成とプッシュ
+      - name: Create and push tag
         run: |
           git tag ${{ env.NEW_VERSION }}
           git push origin ${{ env.NEW_VERSION }}
 
-      - name: リリースファイルの準備
+      - name: Prepare release files
         run: |
           mkdir obsidian-local-rss
           cp main.js manifest.json styles.css README.md obsidian-local-rss/
           zip -r obsidian-local-rss.zip obsidian-local-rss
 
-      - name: GitHubリリースの作成
+      - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RELEASE_NOTES="${{ github.event.inputs.release_notes }}"
           if [ -z "$RELEASE_NOTES" ]; then
-            RELEASE_NOTES="バージョン ${{ env.NEW_VERSION }} のリリース"
+            RELEASE_NOTES="Release version ${{ env.NEW_VERSION }}"
           fi
           
           gh release create "${{ env.NEW_VERSION }}" \
@@ -108,7 +108,7 @@ jobs:
             manifest.json \
             styles.css
 
-      - name: リリース完了通知
+      - name: Release completion notification
         run: |
-          echo "🎉 リリース ${{ env.NEW_VERSION }} が正常に作成されました！"
-          echo "リリースページ: https://github.com/${{ github.repository }}/releases/tag/${{ env.NEW_VERSION }}"
+          echo "🎉 Release ${{ env.NEW_VERSION }} has been created successfully!"
+          echo "Release page: https://github.com/${{ github.repository }}/releases/tag/${{ env.NEW_VERSION }}"
