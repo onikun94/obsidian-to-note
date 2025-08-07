@@ -1,0 +1,10 @@
+{
+	"id": "obsidian-to-note",
+	"name": "Obsidian to Note",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Convert Obsidian markdown to note format for easy copying",
+	"author": "Your Name",
+	"authorUrl": "https://github.com/yourusername",
+	"isDesktopOnly": false
+}
