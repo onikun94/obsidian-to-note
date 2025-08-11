@@ -27,9 +27,6 @@ export class ObsidianToNoteSettingTab extends PluginSettingTab {
 		// チェックボックス設定セクション
 		this.addCheckboxSettings(containerEl);
 
-		// Mermaid設定セクション
-		this.addMermaidSettings(containerEl);
-
 		// 使い方セクション
 		this.addUsageInstructions(containerEl);
 	}
@@ -70,13 +67,24 @@ export class ObsidianToNoteSettingTab extends PluginSettingTab {
 			.setName('ハイライト')
 			.setDesc('==ハイライト==の変換方法')
 			.addDropdown(dropdown => dropdown
-				.addOption('mark', '<mark>タグ')
 				.addOption('bold', '太字（**）')
 				.addOption('italic', '斜体（*）')
 				.addOption('plain', 'プレーンテキスト')
 				.setValue(this.plugin.settings.highlightConversion)
 				.onChange(async (value: any) => {
 					this.plugin.settings.highlightConversion = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('インラインコード')
+			.setDesc('`code`の変換方法')
+			.addDropdown(dropdown => dropdown
+				.addOption('bold', '太字（**）')
+				.addOption('plain', 'プレーンテキスト')
+				.setValue(this.plugin.settings.inlineCodeConversion)
+				.onChange(async (value: any) => {
+					this.plugin.settings.inlineCodeConversion = value;
 					await this.plugin.saveSettings();
 				}));
 	}
@@ -120,44 +128,6 @@ export class ObsidianToNoteSettingTab extends PluginSettingTab {
 				}));
 	}
 
-	private addMermaidSettings(containerEl: HTMLElement): void {
-		let mermaidTextSetting: Setting;
-
-		new Setting(containerEl)
-			.setName('Mermaid図表の変換方法')
-			.setDesc('Mermaid図表をどのように変換するか')
-			.addDropdown(dropdown => dropdown
-				.addOption('text', 'テキストに置換')
-				.addOption('code', 'コードブロックとして保持')
-				.setValue(this.plugin.settings.mermaidConversionType)
-				.onChange(async (value: any) => {
-					this.plugin.settings.mermaidConversionType = value;
-					await this.plugin.saveSettings();
-					// 代替テキスト設定の表示/非表示を切り替え
-					if (value === 'code') {
-						mermaidTextSetting.settingEl.style.display = 'none';
-					} else {
-						mermaidTextSetting.settingEl.style.display = '';
-					}
-				}));
-
-		// テキスト置換の場合の設定
-		mermaidTextSetting = new Setting(containerEl)
-			.setName('Mermaid代替テキスト')
-			.setDesc('Mermaid図表をテキストに置換する場合の代替テキスト')
-			.addTextArea(text => text
-				.setPlaceholder('[Mermaid図]\n(noteでは直接mermaid図を表示できません。mermaid図を別途生成して、noteに貼り付けてください。)')
-				.setValue(this.plugin.settings.mermaidReplacementText)
-				.onChange(async (value) => {
-					this.plugin.settings.mermaidReplacementText = value;
-					await this.plugin.saveSettings();
-				}));
-		
-		// 変換方法がコードの場合は代替テキスト設定を非表示
-		if (this.plugin.settings.mermaidConversionType === 'code') {
-			mermaidTextSetting.settingEl.style.display = 'none';
-		}
-	}
 
 	private addUsageInstructions(containerEl: HTMLElement): void {
 		containerEl.createEl('h3', {text: '使い方'});

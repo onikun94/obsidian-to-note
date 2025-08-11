@@ -11,10 +11,9 @@ describe('型定義とデフォルト設定', () => {
       h5Conversion: 'bold',
       h6Conversion: 'bold',
       highlightConversion: 'bold',
+      inlineCodeConversion: 'plain',
       checkboxUnchecked: '□',
       checkboxChecked: '☑',
-      mermaidConversionType: 'code',
-      mermaidReplacementText: '[Mermaid図]\n(noteでは直接mermaid図を表示できません。mermaid図を別途生成して、noteに貼り付けてください。)',
       internalLinkConversion: 'markdown'
     });
   });
@@ -33,6 +32,7 @@ describe('型定義とデフォルト設定', () => {
 
   it('その他の変換設定が期待通り', () => {
     expect(DEFAULT_SETTINGS.highlightConversion).toBe('bold');
+    expect(DEFAULT_SETTINGS.inlineCodeConversion).toBe('plain');
     expect(DEFAULT_SETTINGS.internalLinkConversion).toBe('markdown');
     expect(DEFAULT_SETTINGS.checkboxUnchecked).toBe('□');
     expect(DEFAULT_SETTINGS.checkboxChecked).toBe('☑');

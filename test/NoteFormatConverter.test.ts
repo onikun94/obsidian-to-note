@@ -93,14 +93,6 @@ describe('NoteFormatConverter', () => {
       expect(converter.convert(input)).toBe(expected);
     });
 
-    it('ハイライトを<mark>タグに変換する', () => {
-      settings.highlightConversion = 'mark';
-      converter = new NoteFormatConverter(settings);
-
-      const input = '==重要なテキスト==';
-      const expected = '<mark>重要なテキスト</mark>';
-      expect(converter.convert(input)).toBe(expected);
-    });
 
     it('ハイライトを斜体に変換する', () => {
       settings.highlightConversion = 'italic';
@@ -136,9 +128,17 @@ describe('NoteFormatConverter', () => {
   });
 
   describe('インラインコードとインライン数式の変換', () => {
-    it('インラインコードのバッククオートを除去する', () => {
+    it('インラインコードをデフォルト設定（プレーンテキスト）で変換する', () => {
       const input = 'これは`console.log("Hello")`というコードです';
       const expected = 'これはconsole.log("Hello")というコードです';
+      expect(converter.convert(input)).toBe(expected);
+    });
+
+    it('インラインコードを太字に変換する', () => {
+      settings.inlineCodeConversion = 'bold';
+      converter = new NoteFormatConverter(settings);
+      const input = 'これは`console.log("Hello")`というコードです';
+      const expected = 'これは**console.log("Hello")**というコードです';
       expect(converter.convert(input)).toBe(expected);
     });
 
@@ -162,15 +162,15 @@ describe('NoteFormatConverter', () => {
       expect(converter.convert(input)).toBe(expected);
     });
 
-    it('下付き文字を<sub>タグに変換する', () => {
+    it('下付き文字をプレーンテキストに変換する', () => {
       const input = 'H~2~O';
-      const expected = 'H<sub>2</sub>O';
+      const expected = 'H2O';
       expect(converter.convert(input)).toBe(expected);
     });
 
     it('取り消し線と下付き文字が混在する場合も正しく変換する', () => {
       const input = '~~削除テキスト~~ と H~2~O';
-      const expected = '~~削除テキスト~~ と H<sub>2</sub>O';
+      const expected = '~~削除テキスト~~ と H2O';
       expect(converter.convert(input)).toBe(expected);
     });
   });
@@ -244,21 +244,10 @@ describe('NoteFormatConverter', () => {
       expect(converter.convert(input)).toBe(expected);
     });
 
-    it('Mermaid図表をコードブロックとして保持する（デフォルト）', () => {
+    it('Mermaid図表をコードブロックとして保持する', () => {
       const input = '```mermaid\ngraph TD\n  A-->B\n```';
       const expected = '```\ngraph TD\n  A-->B\n```';
       expect(converter.convert(input)).toBe(expected);
-    });
-
-    it('Mermaid図表を代替テキストに変換する', () => {
-      const customSettings = {
-        ...DEFAULT_SETTINGS,
-        mermaidConversionType: 'text' as const
-      };
-      const customConverter = new NoteFormatConverter(customSettings);
-      const input = '```mermaid\ngraph TD\n  A-->B\n```';
-      const expected = DEFAULT_SETTINGS.mermaidReplacementText;
-      expect(customConverter.convert(input)).toBe(expected);
     });
   });
 
@@ -412,6 +401,14 @@ test_after`;
     });
 
     it('見出し内のインラインコードのみを変換する', () => {
+      const input = '# \`code\`のみの見出し';
+      const expected = '# codeのみの見出し';
+      expect(converter.convert(input)).toBe(expected);
+    });
+
+    it('見出し内のインラインコードは常に装飾を除去する（太字設定でも）', () => {
+      settings.inlineCodeConversion = 'bold';
+      converter = new NoteFormatConverter(settings);
       const input = '# \`code\`のみの見出し';
       const expected = '# codeのみの見出し';
       expect(converter.convert(input)).toBe(expected);

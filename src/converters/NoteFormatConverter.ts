@@ -61,34 +61,21 @@ export class NoteFormatConverter {
 		
 		let result = content;
 
-		// Mermaid図表の処理（コードブロックより先に処理）
-		result = result.replace(/```mermaid([\s\S]*?)```/g, (match, code) => {
-			if (this.settings.mermaidConversionType === 'code') {
-				// コードブロックとして保持（言語指定は削除）
-				const formatted = '```\n' + code.trim() + '\n```';
-				codeBlocks.push(formatted);
-				return `${codeBlockPlaceholder}${codeBlocks.length - 1}${codeBlockPlaceholder}`;
-			} else {
-				// テキストに置換
-				return this.settings.mermaidReplacementText;
-			}
-		});
-
 		// コードブロックの保護と整形（言語指定を削除）
-		result = result.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, lang, code) => {
+		result = result.replace(/```(\w+)?\n?([\s\S]*?)```/g, (_, __, code) => {
 			const formatted = '```\n' + code.trim() + '\n```';
 			codeBlocks.push(formatted);
 			return `${codeBlockPlaceholder}${codeBlocks.length - 1}${codeBlockPlaceholder}`;
 		});
 		
 		// ブロック数式の保護（$$を除去して保存）
-		result = result.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+		result = result.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {
 			blockMaths.push(math.trim());
 			return `${blockMathPlaceholder}${blockMaths.length - 1}${blockMathPlaceholder}`;
 		});
 
 		// 取り消し線の保護（下付き文字の変換から除外するため）
-		result = result.replace(/~~(.+?)~~/g, (match, content) => {
+		result = result.replace(/~~(.+?)~~/g, (_, content) => {
 			strikethroughs.push(content);
 			return `${strikethroughPlaceholder}${strikethroughs.length - 1}${strikethroughPlaceholder}`;
 		});
@@ -102,7 +89,7 @@ export class NoteFormatConverter {
 	}
 
 	private convertHeadings(content: string): string {
-		return content.replace(/^(#{1,6}) (.+)$/gm, (match, hashes, text) => {
+		return content.replace(/^(#{1,6}) (.+)$/gm, (_, hashes, text) => {
 			const level = hashes.length;
 			// 見出し内の装飾を削除（note.comでの表示問題を回避）
 			text = this.removeHeadingDecorations(text);
@@ -140,7 +127,7 @@ export class NoteFormatConverter {
 	}
 
 	private convertImageLinks(content: string): string {
-		return content.replace(/!\[\[(.+?)\]\]/g, (match, fileName) => {
+		return content.replace(/!\[\[(.+?)\]\]/g, (_, fileName) => {
 			// エイリアスを削除してファイル名のみを取得
 			const cleanFileName = fileName.replace(/\|.*$/, '').trim();
 			return `![${cleanFileName}](${cleanFileName})`;
@@ -148,7 +135,7 @@ export class NoteFormatConverter {
 	}
 
 	private convertInternalLinks(content: string): string {
-		return content.replace(/\[\[(.+?)\]\]/g, (match, linkText) => {
+		return content.replace(/\[\[(.+?)\]\]/g, (_, linkText) => {
 			const parts = linkText.split('|');
 			const displayText = parts.length === 2 ? parts[1] : parts[0];
 			const linkTarget = parts[0];
@@ -167,17 +154,23 @@ export class NoteFormatConverter {
 	}
 
 	private convertInlineFormatting(content: string): string {
-		// インラインコードの変換（バッククオートを除去）
-		content = content.replace(/`([^`]+)`/g, '$1');
+		// インラインコードの変換
+		content = content.replace(/`([^`]+)`/g, (_, code) => {
+			switch (this.settings.inlineCodeConversion) {
+				case 'bold':
+					return `**${code}**`;
+				case 'plain':
+				default:
+					return code;
+			}
+		});
 		
 		// インライン数式の変換（$...$を除去）
 		content = content.replace(/\$([^$]+)\$/g, '$1');
 		
 		// ハイライトの変換
-		content = content.replace(/==(.+?)==/g, (match, text) => {
+		content = content.replace(/==(.+?)==/g, (_, text) => {
 			switch (this.settings.highlightConversion) {
-				case 'mark':
-					return `<mark>${text}</mark>`;
 				case 'bold':
 					return `**${text}**`;
 				case 'italic':
@@ -220,17 +213,17 @@ export class NoteFormatConverter {
 		}
 	): string {
 		// 取り消し線を復元
-		content = content.replace(/___STRIKETHROUGH___(\d+)___STRIKETHROUGH___/g, (match, index) => {
+		content = content.replace(/___STRIKETHROUGH___(\d+)___STRIKETHROUGH___/g, (_, index) => {
 			return `~~${protectedContent.strikethroughs[parseInt(index)]}~~`;
 		});
 		
 		// コードブロックを復元
-		content = content.replace(/___CODEBLOCK___(\d+)___CODEBLOCK___/g, (match, index) => {
+		content = content.replace(/___CODEBLOCK___(\d+)___CODEBLOCK___/g, (_, index) => {
 			return protectedContent.codeBlocks[parseInt(index)];
 		});
 		
 		// ブロック数式を復元
-		content = content.replace(/___BLOCKMATH___(\d+)___BLOCKMATH___/g, (match, index) => {
+		content = content.replace(/___BLOCKMATH___(\d+)___BLOCKMATH___/g, (_, index) => {
 			return protectedContent.blockMaths[parseInt(index)];
 		});
 

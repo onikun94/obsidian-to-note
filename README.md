@@ -52,7 +52,7 @@ A plugin that converts Obsidian markdown to a format that can be copy-pasted int
 - **Internal links [[link]]** → Markdown links [link](link)
 - **Image links ![[image.png]]** → Markdown images ![image.png](image.png)
 - **Highlight ==text==** → **Bold**
-- **Inline code `code`** → Plain text (backticks removed)
+- **Inline code `code`** → Plain text (backticks removed) or **Bold**
 - **Inline math $formula$** → Plain text ($ removed)
 - **Block math $$formula$$** → Plain text ($$ removed)
 - **Code blocks ```lang```** → Code blocks (language specifier removed)
@@ -75,8 +75,10 @@ You can customize the following items in the settings screen:
 - **Highlight conversion**: Choose between:
   - Bold text (**text**)
   - Italic text (*text*)
-  - HTML mark tag (<mark>text</mark>)
   - Plain text
+- **Inline code conversion**: Choose between:
+  - Bold text (**code**)
+  - Plain text (backticks removed)
 - **Internal link processing**: Options include:
   - Markdown link format [text](link)
   - Plain text (link text only)
