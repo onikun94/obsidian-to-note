@@ -42,7 +42,14 @@ export default class ObsidianToNotePlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const savedData = await this.loadData();
+		// 古い設定からの移行
+		if (savedData && 'mermaidConversion' in savedData && !('mermaidConversionType' in savedData)) {
+			savedData.mermaidConversionType = 'text';
+			savedData.mermaidReplacementText = savedData.mermaidConversion;
+			delete savedData.mermaidConversion;
+		}
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, savedData);
 	}
 
 	async saveSettings() {

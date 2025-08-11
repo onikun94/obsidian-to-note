@@ -240,14 +240,25 @@ describe('NoteFormatConverter', () => {
 
     it('上付き文字と下付き文字を変換する', () => {
       const input = 'x^[2] + H~2~O';
-      const expected = 'x<sup>2</sup> + H<sub>2</sub>O';
+      const expected = 'x2 + H2O';
+      expect(converter.convert(input)).toBe(expected);
+    });
+
+    it('Mermaid図表をコードブロックとして保持する（デフォルト）', () => {
+      const input = '```mermaid\ngraph TD\n  A-->B\n```';
+      const expected = '```\ngraph TD\n  A-->B\n```';
       expect(converter.convert(input)).toBe(expected);
     });
 
     it('Mermaid図表を代替テキストに変換する', () => {
+      const customSettings = {
+        ...DEFAULT_SETTINGS,
+        mermaidConversionType: 'text' as const
+      };
+      const customConverter = new NoteFormatConverter(customSettings);
       const input = '```mermaid\ngraph TD\n  A-->B\n```';
-      const expected = DEFAULT_SETTINGS.mermaidConversion;
-      expect(converter.convert(input)).toBe(expected);
+      const expected = DEFAULT_SETTINGS.mermaidReplacementText;
+      expect(customConverter.convert(input)).toBe(expected);
     });
   });
 
@@ -387,7 +398,7 @@ test_after`;
       
       const expected = `test_before
 
-# 見出し内の装飾: **ハイライト** と code を含む見出し
+# 見出し内の装飾: ハイライト と code を含む見出し
 
 test_after`;
       
@@ -396,7 +407,7 @@ test_after`;
 
     it('見出し内のハイライトのみを変換する', () => {
       const input = '# ==ハイライト==のみの見出し';
-      const expected = '# **ハイライト**のみの見出し';
+      const expected = '# ハイライトのみの見出し';
       expect(converter.convert(input)).toBe(expected);
     });
 
@@ -408,13 +419,13 @@ test_after`;
 
     it('H2見出し内の装飾を変換する', () => {
       const input = '## 見出し内の装飾: ==ハイライト== と \`code\` を含む見出し（H2）';
-      const expected = '### 見出し内の装飾: **ハイライト** と code を含む見出し（H2）';
+      const expected = '### 見出し内の装飾: ハイライト と code を含む見出し（H2）';
       expect(converter.convert(input)).toBe(expected);
     });
 
     it('H3見出し内の装飾を変換する', () => {
       const input = '### 見出し内の装飾: ==ハイライト== と \`code\` を含む見出し（H3）';
-      const expected = '**見出し内の装飾: **ハイライト** と code を含む見出し（H3）**';
+      const expected = '**見出し内の装飾: ハイライト と code を含む見出し（H3）**';
       expect(converter.convert(input)).toBe(expected);
     });
   });

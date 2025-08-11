@@ -6,134 +6,119 @@ export class NoteFormatConverter {
 	convert(content: string): string {
 		let converted = content;
 
+		// 1. 前処理
+		converted = this.removeFrontmatter(converted);
+		
+		// 2. 保護が必要な要素を一時的に置換
+		const protectedContent = this.protectSpecialContent(converted);
+		converted = protectedContent.content;
+
+		// 3. 見出しの変換（見出し内の装飾も処理）
+		converted = this.convertHeadings(converted);
+
+		// 4. リンクの変換
+		converted = this.convertImageLinks(converted);
+		converted = this.convertInternalLinks(converted);
+
+		// 5. テキスト装飾の変換
+		converted = this.convertInlineFormatting(converted);
+
+		// 6. リスト要素の変換
+		converted = this.convertCheckboxes(converted);
+		converted = this.convertNumberedLists(converted);
+		converted = this.processNestedNumberedLists(converted);
+
+		// 7. 引用の変換
+		converted = this.convertBlockquotes(converted);
+
+		// 8. 保護した要素を復元
+		converted = this.restoreProtectedContent(converted, protectedContent);
+
+		return converted;
+	}
+
+	private removeFrontmatter(content: string): string {
 		// フロントマターを削除
-		converted = converted.replace(/^---\n[\s\S]*?\n---\n/m, '');
+		let result = content.replace(/^---\n[\s\S]*?\n---\n/m, '');
 		// フロントマター削除後の先頭の空行を削除
-		converted = converted.replace(/^\n+/, '');
+		result = result.replace(/^\n+/, '');
+		return result;
+	}
 
-		// 見出しの変換（H1〜H6）
-		converted = converted.replace(/^(#{1,6}) (.+)$/gm, (match, hashes, text) => {
-			const level = hashes.length;
-			// 見出し内のハイライトを先に処理（<mark>タグが見出し内にあるとnote.comで問題が発生するため）
-			if (text.includes('==')) {
-				// 見出し内では常にハイライトを太字に変換
-				text = text.replace(/==(.*?)==/g, '**$1**');
-			}
-			// 見出し内のインラインコードのバッククオートも削除（note.comでの表示問題を回避）
-			text = text.replace(/`([^`]+)`/g, '$1');
-			return this.convertHeading(text, level);
-		});
-
-		// コードブロックとブロック数式を保護
+	private protectSpecialContent(content: string): {
+		content: string;
+		codeBlocks: string[];
+		blockMaths: string[];
+		strikethroughs: string[];
+	} {
 		const codeBlockPlaceholder = '___CODEBLOCK___';
 		const blockMathPlaceholder = '___BLOCKMATH___';
+		const strikethroughPlaceholder = '___STRIKETHROUGH___';
+		
 		const codeBlocks: string[] = [];
 		const blockMaths: string[] = [];
+		const strikethroughs: string[] = [];
 		
+		let result = content;
+
 		// Mermaid図表の処理（コードブロックより先に処理）
-		converted = converted.replace(/```mermaid([\s\S]*?)```/g, (match, code) => {
-			return this.settings.mermaidConversion;
+		result = result.replace(/```mermaid([\s\S]*?)```/g, (match, code) => {
+			if (this.settings.mermaidConversionType === 'code') {
+				// コードブロックとして保持（言語指定は削除）
+				const formatted = '```\n' + code.trim() + '\n```';
+				codeBlocks.push(formatted);
+				return `${codeBlockPlaceholder}${codeBlocks.length - 1}${codeBlockPlaceholder}`;
+			} else {
+				// テキストに置換
+				return this.settings.mermaidReplacementText;
+			}
 		});
 
 		// コードブロックの保護と整形（言語指定を削除）
-		converted = converted.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, lang, code) => {
+		result = result.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, lang, code) => {
 			const formatted = '```\n' + code.trim() + '\n```';
 			codeBlocks.push(formatted);
 			return `${codeBlockPlaceholder}${codeBlocks.length - 1}${codeBlockPlaceholder}`;
 		});
 		
 		// ブロック数式の保護（$$を除去して保存）
-		converted = converted.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+		result = result.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
 			blockMaths.push(math.trim());
 			return `${blockMathPlaceholder}${blockMaths.length - 1}${blockMathPlaceholder}`;
 		});
 
-		// 画像の内部リンクを標準的なMarkdown形式に変換
-		converted = converted.replace(/!\[\[(.+?)\]\]/g, (match, fileName) => {
-			// ファイル名から拡張子を取得
-			const cleanFileName = fileName.replace(/\|.*$/, '').trim();
-			return `![${cleanFileName}](${cleanFileName})`;
+		// 取り消し線の保護（下付き文字の変換から除外するため）
+		result = result.replace(/~~(.+?)~~/g, (match, content) => {
+			strikethroughs.push(content);
+			return `${strikethroughPlaceholder}${strikethroughs.length - 1}${strikethroughPlaceholder}`;
 		});
 
-		// 内部リンクの変換
-		converted = converted.replace(/\[\[(.+?)\]\]/g, (match, linkText) => {
-			const parts = linkText.split('|');
-			const displayText = parts.length === 2 ? parts[1] : parts[0];
-			const linkTarget = parts[0];
-
-			switch (this.settings.internalLinkConversion) {
-				case 'markdown':
-					return `[${displayText}](${linkTarget})`;
-				case 'plain':
-					return displayText;
-				case 'remove':
-					return '';
-				default:
-					return displayText;
-			}
-		});
-
-		// インラインコードの変換（バッククオートを除去）
-		converted = converted.replace(/`([^`]+)`/g, '$1');
-		
-		// インライン数式の変換（$...$を除去）
-		converted = converted.replace(/\$([^$]+)\$/g, '$1');
-		
-		// ハイライトの変換
-		converted = converted.replace(/==(.+?)==/g, (match, text) => {
-			switch (this.settings.highlightConversion) {
-				case 'mark':
-					return `<mark>${text}</mark>`;
-				case 'bold':
-					return `**${text}**`;
-				case 'italic':
-					return `*${text}*`;
-				case 'plain':
-				default:
-					return text;
-			}
-		});
-
-		// 取り消し線の保護（下付き文字の変換から除外するため一時的に置換）
-		const strikethroughPlaceholder = '___STRIKETHROUGH___';
-		converted = converted.replace(/~~(.+?)~~/g, (match, content) => {
-			return `${strikethroughPlaceholder}${content}${strikethroughPlaceholder}`;
-		});
-		
-		// 上付き文字と下付き文字の変換
-		converted = converted.replace(/\^\[(.+?)\]/g, '<sup>$1</sup>');
-		converted = converted.replace(/~(.+?)~/g, '<sub>$1</sub>');
-
-		// チェックボックスの変換
-		converted = converted.replace(/- \[ \] (.+)$/gm, `${this.settings.checkboxUnchecked} $1`);
-		converted = converted.replace(/- \[x\] (.+)$/gm, `${this.settings.checkboxChecked} $1`);
-
-		// 1) 形式の番号付きリストを 1. 形式に変換（単純な場合）
-		converted = converted.replace(/^(\d+)\)\s+(.*)$/gm, '$1. $2');
-
-		// ネストされた番号付きリストの処理
-		converted = this.processNestedNumberedLists(converted);
-
-		// 通常の引用記号の後に全角スペースを追加（既にスペースがある場合は全角に置換）
-		converted = converted.replace(/^>\s*/gm, '>　');
-		
-		// 取り消し線を元に戻す
-		converted = converted.replace(new RegExp(strikethroughPlaceholder, 'g'), '~~');
-		
-		// コードブロックを元に戻す
-		converted = converted.replace(new RegExp(`${codeBlockPlaceholder}(\\d+)${codeBlockPlaceholder}`, 'g'), (match, index) => {
-			return codeBlocks[parseInt(index)];
-		});
-		
-		// ブロック数式を元に戻す
-		converted = converted.replace(new RegExp(`${blockMathPlaceholder}(\\d+)${blockMathPlaceholder}`, 'g'), (match, index) => {
-			return blockMaths[parseInt(index)];
-		});
-
-		return converted;
+		return {
+			content: result,
+			codeBlocks,
+			blockMaths,
+			strikethroughs
+		};
 	}
 
-	private convertHeading(text: string, level: number): string {
+	private convertHeadings(content: string): string {
+		return content.replace(/^(#{1,6}) (.+)$/gm, (match, hashes, text) => {
+			const level = hashes.length;
+			// 見出し内の装飾を削除（note.comでの表示問題を回避）
+			text = this.removeHeadingDecorations(text);
+			return this.formatHeading(text, level);
+		});
+	}
+
+	private removeHeadingDecorations(text: string): string {
+		// ハイライトの削除
+		text = text.replace(/==(.*?)==/g, '$1');
+		// インラインコードの削除
+		text = text.replace(/`([^`]+)`/g, '$1');
+		return text;
+	}
+
+	private formatHeading(text: string, level: number): string {
 		const conversionMap: { [key: number]: HeadingConversion } = {
 			1: this.settings.h1Conversion,
 			2: this.settings.h2Conversion,
@@ -152,6 +137,104 @@ export class NoteFormatConverter {
 			case 'plain': 
 			default: return text;
 		}
+	}
+
+	private convertImageLinks(content: string): string {
+		return content.replace(/!\[\[(.+?)\]\]/g, (match, fileName) => {
+			// エイリアスを削除してファイル名のみを取得
+			const cleanFileName = fileName.replace(/\|.*$/, '').trim();
+			return `![${cleanFileName}](${cleanFileName})`;
+		});
+	}
+
+	private convertInternalLinks(content: string): string {
+		return content.replace(/\[\[(.+?)\]\]/g, (match, linkText) => {
+			const parts = linkText.split('|');
+			const displayText = parts.length === 2 ? parts[1] : parts[0];
+			const linkTarget = parts[0];
+
+			switch (this.settings.internalLinkConversion) {
+				case 'markdown':
+					return `[${displayText}](${linkTarget})`;
+				case 'plain':
+					return displayText;
+				case 'remove':
+					return '';
+				default:
+					return displayText;
+			}
+		});
+	}
+
+	private convertInlineFormatting(content: string): string {
+		// インラインコードの変換（バッククオートを除去）
+		content = content.replace(/`([^`]+)`/g, '$1');
+		
+		// インライン数式の変換（$...$を除去）
+		content = content.replace(/\$([^$]+)\$/g, '$1');
+		
+		// ハイライトの変換
+		content = content.replace(/==(.+?)==/g, (match, text) => {
+			switch (this.settings.highlightConversion) {
+				case 'mark':
+					return `<mark>${text}</mark>`;
+				case 'bold':
+					return `**${text}**`;
+				case 'italic':
+					return `*${text}*`;
+				case 'plain':
+				default:
+					return text;
+			}
+		});
+
+		// 上付き文字と下付き文字の変換（プレーンテキストに）
+		content = content.replace(/\^\[(.+?)\]/g, '$1');
+		content = content.replace(/~(.+?)~/g, '$1');
+
+		return content;
+	}
+
+	private convertCheckboxes(content: string): string {
+		content = content.replace(/- \[ \] (.+)$/gm, `${this.settings.checkboxUnchecked} $1`);
+		content = content.replace(/- \[x\] (.+)$/gm, `${this.settings.checkboxChecked} $1`);
+		return content;
+	}
+
+	private convertNumberedLists(content: string): string {
+		// 1) 形式の番号付きリストを 1. 形式に変換
+		return content.replace(/^(\d+)\)\s+(.*)$/gm, '$1. $2');
+	}
+
+	private convertBlockquotes(content: string): string {
+		// 引用記号の後に全角スペースを追加
+		return content.replace(/^>\s*/gm, '>　');
+	}
+
+	private restoreProtectedContent(
+		content: string, 
+		protectedContent: {
+			codeBlocks: string[];
+			blockMaths: string[];
+			strikethroughs: string[];
+		}
+	): string {
+		// 取り消し線を復元
+		content = content.replace(/___STRIKETHROUGH___(\d+)___STRIKETHROUGH___/g, (match, index) => {
+			return `~~${protectedContent.strikethroughs[parseInt(index)]}~~`;
+		});
+		
+		// コードブロックを復元
+		content = content.replace(/___CODEBLOCK___(\d+)___CODEBLOCK___/g, (match, index) => {
+			return protectedContent.codeBlocks[parseInt(index)];
+		});
+		
+		// ブロック数式を復元
+		content = content.replace(/___BLOCKMATH___(\d+)___BLOCKMATH___/g, (match, index) => {
+			return protectedContent.blockMaths[parseInt(index)];
+		});
+
+		return content;
 	}
 
 	private processNestedNumberedLists(content: string): string {
@@ -181,14 +264,14 @@ export class NoteFormatConverter {
 						const quoteMatch = nextLine.match(/^[\s\t]+>\s*(.*)$/);
 						if (quoteMatch) {
 							const quoteContent = quoteMatch[1];
-							// 引用をインデントなしで追加（> を維持）、空行も含む
+							// 引用をインデントなしで追加、全角スペースを追加
 							processedLines.push(`>　${quoteContent}`);
 						}
 						// インデントされたリスト項目
 						else {
 							const listItemMatch = nextLine.match(/^[\s\t]+[-*]\s*(.*)$/);
 							if (listItemMatch) {
-								// リスト項目をインデントなしで追加（空の内容も含む）
+								// リスト項目をインデントなしで追加
 								const itemContent = listItemMatch[1] || '';
 								processedLines.push(`- ${itemContent}`);
 							} else {

@@ -1,6 +1,7 @@
 export type HeadingConversion = 'h1' | 'h2' | 'bold' | 'plain';
 export type HighlightConversion = 'mark' | 'bold' | 'italic' | 'plain';
 export type InternalLinkConversion = 'markdown' | 'plain' | 'remove';
+export type MermaidConversion = 'text' | 'code';
 
 export interface ObsidianToNoteSettings {
 	// 見出し変換設定
@@ -14,7 +15,8 @@ export interface ObsidianToNoteSettings {
 	highlightConversion: HighlightConversion;
 	checkboxUnchecked: string;
 	checkboxChecked: string;
-	mermaidConversion: string;
+	mermaidConversionType: MermaidConversion;
+	mermaidReplacementText: string;
 	// リンク変換設定
 	internalLinkConversion: InternalLinkConversion;
 }
@@ -31,6 +33,7 @@ export const DEFAULT_SETTINGS: ObsidianToNoteSettings = {
 	highlightConversion: 'bold',
 	checkboxUnchecked: '□',
 	checkboxChecked: '☑',
-	mermaidConversion: '[Mermaid図]\n(Obsidianで表示してください)',
+	mermaidConversionType: 'code',
+	mermaidReplacementText: '[Mermaid図]\n(noteでは直接mermaid図を表示できません。mermaid図を別途生成して、noteに貼り付けてください。)',
 	internalLinkConversion: 'markdown'
 };

@@ -13,7 +13,8 @@ describe('型定義とデフォルト設定', () => {
       highlightConversion: 'bold',
       checkboxUnchecked: '□',
       checkboxChecked: '☑',
-      mermaidConversion: '[Mermaid図]\n(Obsidianで表示してください)',
+      mermaidConversionType: 'code',
+      mermaidReplacementText: '[Mermaid図]\n(noteでは直接mermaid図を表示できません。mermaid図を別途生成して、noteに貼り付けてください。)',
       internalLinkConversion: 'markdown'
     });
   });
