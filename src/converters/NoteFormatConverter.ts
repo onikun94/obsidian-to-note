@@ -6,9 +6,21 @@ export class NoteFormatConverter {
 	convert(content: string): string {
 		let converted = content;
 
+		// フロントマターを削除
+		converted = converted.replace(/^---\n[\s\S]*?\n---\n/m, '');
+		// フロントマター削除後の先頭の空行を削除
+		converted = converted.replace(/^\n+/, '');
+
 		// 見出しの変換（H1〜H6）
 		converted = converted.replace(/^(#{1,6}) (.+)$/gm, (match, hashes, text) => {
 			const level = hashes.length;
+			// 見出し内のハイライトを先に処理（<mark>タグが見出し内にあるとnote.comで問題が発生するため）
+			if (text.includes('==')) {
+				// 見出し内では常にハイライトを太字に変換
+				text = text.replace(/==(.*?)==/g, '**$1**');
+			}
+			// 見出し内のインラインコードのバッククオートも削除（note.comでの表示問題を回避）
+			text = text.replace(/`([^`]+)`/g, '$1');
 			return this.convertHeading(text, level);
 		});
 
@@ -38,7 +50,9 @@ export class NoteFormatConverter {
 
 		// 画像の内部リンクを標準的なMarkdown形式に変換
 		converted = converted.replace(/!\[\[(.+?)\]\]/g, (match, fileName) => {
-			return `![${fileName}](${fileName})`;
+			// ファイル名から拡張子を取得
+			const cleanFileName = fileName.replace(/\|.*$/, '').trim();
+			return `![${cleanFileName}](${cleanFileName})`;
 		});
 
 		// 内部リンクの変換
@@ -94,9 +108,15 @@ export class NoteFormatConverter {
 		converted = converted.replace(/- \[ \] (.+)$/gm, `${this.settings.checkboxUnchecked} $1`);
 		converted = converted.replace(/- \[x\] (.+)$/gm, `${this.settings.checkboxChecked} $1`);
 
+		// 1) 形式の番号付きリストを 1. 形式に変換（単純な場合）
+		converted = converted.replace(/^(\d+)\)\s+(.*)$/gm, '$1. $2');
+
 		// ネストされた番号付きリストの処理
 		converted = this.processNestedNumberedLists(converted);
 
+		// 通常の引用記号の後に全角スペースを追加（既にスペースがある場合は全角に置換）
+		converted = converted.replace(/^>\s*/gm, '>　');
+		
 		// 取り消し線を元に戻す
 		converted = converted.replace(new RegExp(strikethroughPlaceholder, 'g'), '~~');
 		
@@ -142,8 +162,8 @@ export class NoteFormatConverter {
 		while (i < lines.length) {
 			const line = lines[i];
 			
-			// 番号付きリストの開始を検出
-			const numberedListMatch = line.match(/^(\d+)\.\s+(.+)$/);
+			// 番号付きリストの開始を検出（1. または 1) の両形式に対応）
+			const numberedListMatch = line.match(/^(\d+)[.)]\s+(.*)$/);
 			
 			if (numberedListMatch) {
 				const listNumber = numberedListMatch[1];
@@ -162,17 +182,21 @@ export class NoteFormatConverter {
 						if (quoteMatch) {
 							const quoteContent = quoteMatch[1];
 							// 引用をインデントなしで追加（> を維持）、空行も含む
-							processedLines.push(`> ${quoteContent}`);
+							processedLines.push(`>　${quoteContent}`);
 						}
 						// インデントされたリスト項目
 						else {
-							const listItemMatch = nextLine.match(/^[\s\t]+[-*]\s+(.+)$/);
+							const listItemMatch = nextLine.match(/^[\s\t]+[-*]\s*(.*)$/);
 							if (listItemMatch) {
-								// リスト項目をインデントなしで追加
-								processedLines.push(`- ${listItemMatch[1]}`);
+								// リスト項目をインデントなしで追加（空の内容も含む）
+								const itemContent = listItemMatch[1] || '';
+								processedLines.push(`- ${itemContent}`);
 							} else {
 								// その他のインデントされた内容はそのまま追加（インデントを除去）
-								processedLines.push(nextLine.trim());
+								const trimmedContent = nextLine.trim();
+								if (trimmedContent) {
+									processedLines.push(trimmedContent);
+								}
 							}
 						}
 						i++;
