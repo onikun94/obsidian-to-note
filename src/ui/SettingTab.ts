@@ -13,7 +13,6 @@ export class ObsidianToNoteSettingTab extends PluginSettingTab {
 		const {containerEl} = this;
 
 		containerEl.empty();
-		containerEl.createEl('h2', {text: 'Obsidian to Note 設定'});
 
 		// 見出しの設定セクション
 		this.addHeadingSettings(containerEl);
@@ -32,8 +31,7 @@ export class ObsidianToNoteSettingTab extends PluginSettingTab {
 	}
 
 	private addHeadingSettings(containerEl: HTMLElement): void {
-		containerEl.createEl('h3', {text: '見出しの変換'});
-
+		// 見出しの変換設定
 		const headingLevels = [
 			{ level: 1, name: 'H1（#）', setting: 'h1Conversion' },
 			{ level: 2, name: 'H2（##）', setting: 'h2Conversion' },
@@ -61,8 +59,7 @@ export class ObsidianToNoteSettingTab extends PluginSettingTab {
 	}
 
 	private addFormattingSettings(containerEl: HTMLElement): void {
-		containerEl.createEl('h3', {text: 'その他の変換'});
-
+		// その他の変換設定
 		new Setting(containerEl)
 			.setName('ハイライト')
 			.setDesc('==ハイライト==の変換方法')
@@ -130,9 +127,11 @@ export class ObsidianToNoteSettingTab extends PluginSettingTab {
 
 
 	private addUsageInstructions(containerEl: HTMLElement): void {
-		containerEl.createEl('h3', {text: '使い方'});
+		// 使い方の説明
+		const instructionDiv = containerEl.createDiv('obsidian-to-note-usage-section');
+		instructionDiv.createEl('div', {text: '使い方', cls: 'obsidian-to-note-usage-title'});
 		
-		const instructions = containerEl.createEl('ol');
+		const instructions = instructionDiv.createEl('ol');
 		instructions.createEl('li', {text: 'noteに投稿したいノートを開く'});
 		instructions.createEl('li', {text: 'コマンドパレット（Cmd/Ctrl+P）から「Convert current file to note format」を実行'});
 		instructions.createEl('li', {text: '左サイドバーのペンアイコンをクリック'});
@@ -140,7 +139,7 @@ export class ObsidianToNoteSettingTab extends PluginSettingTab {
 		instructions.createEl('li', {text: '「コピー」または「note で開く」をクリック'});
 		instructions.createEl('li', {text: 'noteのエディタに貼り付け'});
 		
-		containerEl.createEl('p', {
+		instructionDiv.createEl('p', {
 			text: '※ 「note で開く」をクリックすると、自動でクリップボードにコピーしてからnoteの新規投稿画面を開きます。',
 			cls: 'setting-item-description'
 		});

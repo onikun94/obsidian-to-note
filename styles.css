@@ -1,0 +1,32 @@
+/* Obsidian to Note Plugin Styles */
+
+/* Note Preview Modal Styles */
+.obsidian-to-note-preview-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--background-modifier-border);
+    padding: 10px;
+    margin: 10px 0;
+}
+
+.obsidian-to-note-preview-content {
+    white-space: pre-wrap;
+    font-family: monospace;
+}
+
+.obsidian-to-note-button-container {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+/* Settings Tab Styles */
+.obsidian-to-note-usage-section {
+    margin-top: 20px;
+}
+
+.obsidian-to-note-usage-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
