@@ -67,7 +67,7 @@ jobs:
           sed -i "s/version-[0-9]*\.[0-9]*\.[0-9]*/version-${NEW_VERSION}/g" README.md
           
           # Commit changes
-          git add package.json manifest.json versions.json README.md
+          git add package.json manifest.json versions.json 
           git commit -m "chore: bump version to ${NEW_VERSION}"
           
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
@@ -88,7 +88,7 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir obsidian-to-note
-          cp main.js manifest.json README.md obsidian-to-note/
+          cp main.js manifest.json styles.css obsidian-to-note/
           zip -r obsidian-to-note.zip obsidian-to-note
 
       - name: Create GitHub release
@@ -106,6 +106,7 @@ jobs:
             obsidian-to-note.zip \
             main.js \
             manifest.json \
+            styles.css \
 
       - name: Release completion notification
         run: |

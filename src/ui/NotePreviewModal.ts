@@ -25,19 +25,18 @@ export class NotePreviewModal extends Modal {
 	}
 
 	private createPreviewContainer(contentEl: HTMLElement): HTMLElement {
-		const previewContainer = contentEl.createDiv('note-preview-container');
-		previewContainer.style.cssText = this.getPreviewContainerStyles();
+		const previewContainer = contentEl.createDiv('obsidian-to-note-preview-container');
 		
-		const pre = previewContainer.createEl('pre');
-		pre.style.cssText = 'white-space: pre-wrap; font-family: monospace;';
+		const pre = previewContainer.createEl('pre', {
+			cls: 'obsidian-to-note-preview-content'
+		});
 		pre.setText(this.content);
 		
 		return previewContainer;
 	}
 
 	private createButtonContainer(contentEl: HTMLElement): HTMLElement {
-		const buttonContainer = contentEl.createDiv('modal-button-container');
-		buttonContainer.style.cssText = this.getButtonContainerStyles();
+		const buttonContainer = contentEl.createDiv('obsidian-to-note-button-container');
 		return buttonContainer;
 	}
 
@@ -110,25 +109,6 @@ export class NotePreviewModal extends Modal {
 		sanitized = sanitized.replace(/\(/g, '（').replace(/\)/g, '）');
 		
 		return sanitized;
-	}
-
-	private getPreviewContainerStyles(): string {
-		return [
-			'max-height: 400px',
-			'overflow-y: auto',
-			'border: 1px solid var(--background-modifier-border)',
-			'padding: 10px',
-			'margin: 10px 0'
-		].join('; ');
-	}
-
-	private getButtonContainerStyles(): string {
-		return [
-			'display: flex',
-			'gap: 10px',
-			'justify-content: flex-end',
-			'margin-top: 10px'
-		].join('; ');
 	}
 
 	onClose() {
